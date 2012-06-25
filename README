@@ -4,7 +4,7 @@ Tools for video conversion
 The goal is to stream video via HTTP to HTML5 browsers and mobile devices.  
 Such browsers and devices do not have a common supported video format and
 most video is captured and/or edited in other formats.  We need tools to 
-convert from the capture formats to the straming formats.  FFMPEG (incl. 
+convert from the capture formats to the streaming formats.  FFMPEG (incl. 
 the associated libraries it uses) is a terrific tool for this, but it has 
 lots of configuration options that need to be set on each run. 
 
@@ -45,6 +45,14 @@ equivalent in terms of the quality parameters used for encoding.
 Run this script from the public/ directory.
 
 
+* Stage 3 - Create the HTML code
 
+  create_html_embed_code.pl 
+  create_video_html_pages.pl
+
+  To properly support all browsers and devices, some mildly fancy HTML
+needs to be assembled.  These scripts scan the current directory for 
+videos and assemble the HTML.  One script outputs everything in one 
+HTML page to stdout.  The other script creates one file per video.
 
 
