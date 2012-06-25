@@ -33,6 +33,18 @@ interest to my workflow is normalizing the audio volume of the videos.
 Run this script from the masters/ directory.
 
 
+* Stage 2 - Create the streaming versions
+
+  convert_video_to_streaming.pl
+
+  The streaming videos should be in the formats understood by browsers 
+and devices.  They should also be low enough average bitrate that they
+can stream over slower connections.  The versions should be roughly
+equivalent in terms of the quality parameters used for encoding.
+
+Run this script from the public/ directory.
+
+
 
 
 
