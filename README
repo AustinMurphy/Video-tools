@@ -1,3 +1,38 @@
 Tools for video conversion
 
 
+The goal is to stream video via HTTP to HTML5 browsers and mobile devices.  
+Such browsers and devices do not have a common supported video format and
+most video is captured and/or edited in other formats.  We need tools to 
+convert from the capture formats to the straming formats.  FFMPEG (incl. 
+the associated libraries it uses) is a terrific tool for this, but it has 
+lots of configuration options that need to be set on each run. 
+
+The purpose of this project is to wrap up FFMPEG and its allies into a 
+workflow that meets our needs. 
+
+
+The Workflow
+------------
+
+This workflow assumes a directory structure:
+
+ upload/   - where the source video gets put
+ masters/  - where the master video gets put
+ public/   - where the streamable videos get put
+
+
+* Stage 1 - Create a master 
+
+  convert_video_to_master.pl
+
+  The master video the last stage of quality improvement before the video
+is converted to equal or lower quality streaming formats.  Of particular
+interest to my workflow is normalizing the audio volume of the videos.
+
+Run this script from the masters/ directory.
+
+
+
+
+
