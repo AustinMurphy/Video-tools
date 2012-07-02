@@ -1,24 +1,4 @@
 #!/usr/bin/perl
-#
-#  Written by Austin Murphy <austin.murphy@gmail.com>, 2010 - 2012
-# 
-#  This script takes an input video and creates a "master" from it.
-#    - validates that source video meets requirements (res, dur, aspect, etc)
-#    - moves video (unchanged) to Matroska container
-#    - normalizes the audio volume
-#    - removes extra video/audio/subtitle/data streams
-# 
-#  Desired, but unimplemented, features are:
-#    - choose best of multiple streams
-#    - compress the dynamic range of the audio
-#    - transcode subtitles
-#    - visual brightness normalizing
-#    - de-letterboxing
-#  
-#
-
-
-
 
 use strict;
 
@@ -47,6 +27,7 @@ use constant FFPROBE => "/usr/bin/ffprobe";
 use constant FFMPEG => "/usr/bin/ffmpeg";
 #use constant WAVEGAIN => "/usr/local/bin/wavegain";
 use constant NORMALIZE => "/usr/bin/normalize";
+use constant MENCODER => "/usr/bin/mencoder";
 
 
 # source video contraints
@@ -63,10 +44,6 @@ my %dars = (
   "1.50"  =>  "3:2",
   "1.78"  => "16:9",
 );
-
-
-
-
 
 
 ############################
@@ -119,15 +96,14 @@ my @streams;
 my %strm_info;
 
 while ( <STREAM_INFO> ) {
-  
-  chomp;
+
+chomp;
 
   if ( /\[STREAM\]/ ) {
 
   } elsif ( /\[\/STREAM\]/ ) {
     push @streams, { %strm_info };
     %strm_info = ();
-
   } else {
     (my $key, my $val) = split('=');
     #print "key: $key , val: $val \n";
@@ -196,8 +172,23 @@ foreach my $i ( 0 .. $#streams ) {
     last;
   }
 }
+
+foreach my $i ( 0 .. $#streams ) {
+  if ( $streams[$i]{'codec_name'} eq "sipr" ) {
+  print "realmedia audio format found (sipr) \n";
+  print "Attemptine to convert\n";
+  #mencoder();
+  }
+} 
+
 if ( $j eq -1 ) {
   die "No video stream found\n";
+}
+# check for multiple stream realmedia files
+if ( $j > 1 &&  $fmt_info{'format_name'} eq "rm" ) {
+    print "Multiple stream realmedia file found \n" ;
+    print "Attempting to convert \n" ;
+    mencoder();
 }
 my %v_strm =  %{$streams[$j]} ;
 
@@ -341,6 +332,9 @@ print " $OUTDIR \n";
 
 
 
+# temp
+#exit;
+
 
 
 ############################
@@ -357,7 +351,7 @@ print " $OUTDIR \n";
 
 # fmpeg -i videoname.source -acodec pcm_s16le -f wav  videoname.wav
 
-my $wav_extr_cmd = FFMPEG . " -i $video_raw -acodec pcm_s16le -ar 48000 -ac 1 -f wav $WAV_OUTPUT_FILE ";
+my $wav_extr_cmd =  FFMPEG . " -i $video_raw -acodec pcm_s16le -ar 48000 -ac 1 -f wav $WAV_OUTPUT_FILE ";
 
 
 print "\n\n";
@@ -373,6 +367,19 @@ my $wav_extr_errors = `$wav_extr_cmd 2>/dev/null`;
 #
 
 # ffmpeg -drc_scale ...
+
+# Snap to aspect ratio
+sub snap {
+  (my $width, my $height) = @_;
+my $ratio = $width/$height ;
+
+ while ( my ($key, $value) = each(%dars) ) {
+       if  (abs($key - $ratio) < 0.1) {
+	return $key; 
+    }
+  }
+return $ratio;
+}
 
 
 
@@ -403,6 +410,7 @@ my $wav_norm_errors = `$wav_norm_cmd 2>/dev/null`;
 # 
 # New FFMPEG syntax (0.10)
 my $master_cmd = FFMPEG . " -i $video_raw -i $WAV_OUTPUT_FILE  -map 0:v:0 -c:v copy  -map 1:a:0 -c:a copy  -f matroska $MASTER_OUTPUT_FILE ";
+#my $master_cmd = FFMPEG . " -i $video_raw -i $WAV_OUTPUT_FILE  -f matroska $MASTER_OUTPUT_FILE ";
 
 
 print "\n\n";
@@ -419,6 +427,42 @@ my $master_errors = `$master_cmd 2>/dev/null`;
 
 print "\n";
 #print "\n";
+
+
+# mencoder -- used to convert realmedia files.
+# its a shame that ffmpeg cant do this and surprising since
+# mplayer calls on ffmpeg to provide the codecs. 
+sub mencoder {
+#
+# output file name 
+# 
+my $OUTPUT_FILE = $video_raw;
+# trim the directories from the front
+$OUTPUT_FILE =~ s/^.*\///;
+# trim the suffix
+$OUTPUT_FILE =~ s/\.[^\.]*$//;
+# dots are only for me
+$OUTPUT_FILE =~ s/\./_/g;
+
+my $CONVERTED_OUTPUT_FILE= $OUTPUT_FILE . ".tmp";
+
+my $rm_convert_cmd =  MENCODER . " $video_raw  -oac lavc  -ovc x264 -o $CONVERTED_OUTPUT_FILE ";  
+
+my $converted_errors = `$rm_convert_cmd 2>/dev/null`;
+
+print "Converting file into a format ffmpeg understands. \n" ;
+print "    Running realmedia conversion command: \n $rm_convert_cmd \n" ;
+
+print " Rerunning converion scripts. \n" ;
+
+system("convert_video_to_master.pl", "$CONVERTED_OUTPUT_FILE") ;
+
+system("rm $CONVERTED_OUTPUT_FILE");
+
+exit;
+
+}
+
 
 print " END OF VIDEO CONVERSION SCRIPT \n";
 
