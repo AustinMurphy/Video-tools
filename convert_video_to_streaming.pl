@@ -1,15 +1,4 @@
 #!/usr/bin/perl
-#
-#  Written by Austin Murphy <austin.murphy@gmail.com>, 2010 - 2012
-# 
-#  This script takes a "master" video and converts it to 3 streamable formats.
-#    - Format 1:  h.264 / AAC / MP4 
-#    - Format 2:  theora / vorbis / ogg
-#    - Format 3:  vp8 / vorbis / webm
-#    - output size options: 240p, 360p, 480p (aspect ratio is preserved)
-#    - tries to make smart decisions, like not upscaling
-#
-
 
 use strict;
 use Getopt::Std;
@@ -444,13 +433,16 @@ print " Audio: " . OUT_AUD_CHAN . " channel(s) @ $aud_hz samples/sec \n";
 # set the specs of the conversions
 #
 
-my $MP4_FF_VID = "-vcodec libx264 -vpre slow -vpre baseline -crf 20";
+#MP4
+my $MP4_FF_VID = "-vcodec libx264 -preset slow -profile:v  baseline -crf 23 -keyint_min 0 -g 250 -skip_threshold 0 -qmin 10 -qmax 51" ;
 my $MP4_FF_AUD = "-acodec libfaac -ab " . OUT_AUD_BITRATE ."k -ac " . OUT_AUD_CHAN . " -ar $aud_hz -async 400";
 
+#OGG
 my $FF2T_VID = "-v 8 --speedlevel 0";
 my $FF2T_AUD = "-A " . OUT_AUD_BITRATE . " -c " . OUT_AUD_CHAN . " -H $aud_hz";
 
-my $WEBM_FF_VID = "-vcodec libvpx -keyint_min 0 -g 250 -skip_threshold 0 -qmin 10 -qmax 51";
+#WEBM
+my $WEBM_FF_VID = "-vcodec libvpx -keyint_min 0 -g 250 -skip_threshold 0 -qmin 10 -qmax 51 -crf 23";
 my $WEBM_FF_AUD = "-acodec libvorbis -ab " . OUT_AUD_BITRATE ."k -ac " . OUT_AUD_CHAN . " -ar $aud_hz -async 400";
 
 
