@@ -438,7 +438,7 @@ my $MP4_FF_VID = "-vcodec libx264 -preset slow -profile:v  baseline -crf 23 -key
 my $MP4_FF_AUD = "-acodec libfaac -ab " . OUT_AUD_BITRATE ."k -ac " . OUT_AUD_CHAN . " -ar $aud_hz -async 400";
 
 #OGG
-my $FF2T_VID = "-v 8 --speedlevel 0";
+my $FF2T_VID = "-v 6 --speedlevel 0";
 my $FF2T_AUD = "-A " . OUT_AUD_BITRATE . " -c " . OUT_AUD_CHAN . " -H $aud_hz";
 
 #WEBM
