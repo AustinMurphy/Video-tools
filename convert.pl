@@ -1,54 +1,167 @@
 #!/usr/bin/perl
 
+use File::Basename;
+use File::Path qw(mkpath);
 use strict;
 
 use constant convert_to_master => "/usr/local/bin/convert_video_to_master.pl";
-use constant convert_to_stream => "/usr/local/bin/convert_video_to_streaming.pl";
+use constant convert_to_stream =>
+  "/usr/local/bin/convert_video_to_streaming.pl";
 
+#Home Directory PATH
+my $HOMEDIR = $ENV{"HOME"};
 
-foreach my $argnum (0 .. $#ARGV) {
+#check for video directory.
+my $directory = "$HOMEDIR/videos";
+if ( -e $directory ) {
 
-my $filename =  $ARGV[$argnum];
+    # needs check
+}
 
-print "$filename \n" ;
+my $numArgs = $#ARGV + 1;
 
+#foreach $argnum (0 .. $#ARGV) {
+#  print "$ARGV[$argnum]\n";
+#}
 
-if (-e $filename) {
- print "File Exists! \n";
+#check for input. If none, run from upload directory.
+if ( $numArgs == 0 ) {
 
-print" converting to master. \n";
+    #copy folder tree into the master directory.
+    my $orig = "$HOMEDIR/videos/upload";
+    my $new  = "$HOMEDIR/videos/masters";
 
-my $convertm_cmd = convert_to_master . " $ARGV[$argnum]";
-print " $convertm_cmd \n";
+    print "Copying folder tree into masters directory \n\n";
 
-system($convertm_cmd);
+    copyDirTree( $orig, $new );
 
+    setPath($orig);
 
-my $OUTPUT_FILE = $filename;
-# trim the directories from the front
-$OUTPUT_FILE =~ s/^.*\///;
-# trim the suffix
-$OUTPUT_FILE =~ s/\.[^\.]*$//;
-# dots are only for me
-$OUTPUT_FILE =~ s/\./_/g;
+    #fild all files in the original directory
+    my @files = (`find $HOMEDIR/videos/upload  -type f`);
+    foreach my $file (@files) {
 
-print "converting to stream. \n";
-sleep 1;
-my $MASTER_INPUT_FILE = $OUTPUT_FILE . ".master";
-#my $MASTER_OUTPUT_FILE = $OUTPUT_FILE . ".master";
+        ( my $fileBaseName, my $dirName, my $fileExtension ) = fileparse($file);
 
+        my $outputFile = $file;
+        $outputFile = $dirName;
+        $dirName =~ s/upload/masters/;
 
-#if (-e $MASTER_INPUT_FILE) {
-# print "File Exists!";
+        setPath($dirName);
+        print "setpath to $dirName\n";
+        convertToMaster($file);
+    }
 
-my $converts_cmd = convert_to_stream . " -i  $MASTER_INPUT_FILE";
+     $orig = "$HOMEDIR/videos/masters";
+     $new  = "$HOMEDIR/videos/public";
 
-print " $converts_cmd \n";
+    copyDirTree("/home/kbende/videos/masters", "/home/kbende/videos/public"  );
 
-system($converts_cmd);
+    setPath($new);
 
+    #fild all files in the master directory
+    my @files = (`find $HOMEDIR/videos/masters  -type f`);
+print "@files\n";
+    foreach my $file (@files) {
+
+        ( my $fileBaseName, my $dirName, my $fileExtension ) = fileparse($file);
+print "$fileExtension";
+if( $fileExtension == ".master"){
+        my $outputFile = $file;
+        $outputFile = $dirName;
+        $dirName =~ s/masters/public/;
+
+        setPath($dirName);
+        print "setpath to $dirName\n";
+print "//////////////////////////// $file \n";
+        convertToStream($file);
+    }
 }
 }
 
+if ( $numArgs >= 1 ) {
+
+    foreach my $argnum ( 0 .. $#ARGV ) {
+        my $filename = $ARGV[$argnum];
+        convertToMaster($filename);
+    }
+}
+
+sub convertToMaster() {
+
+    ( my $inputFile ) = @_;
+
+    print "$inputFile\n";
+    print "File Exists! \n";
+    print " converting to master. \n";
+    my $convertm_cmd = convert_to_master . " $inputFile";
+    print " $convertm_cmd \n";
+    system($convertm_cmd);
+}
+
+sub convertToStream() {
+    ( my $MASTER_INPUT_FILE ) = @_;
+    #my $OUTPUT_FILE = strip($MASTER_INPUT_FILE);
+    print "converting to stream. \n";
+    #my $MASTER_INPUT_FILE = $OUTPUT_FILE . ".master";
+
+    #my $MASTER_OUTPUT_FILE = $OUTPUT_FILE . ".master";
+    #if (-e $MASTER_INPUT_FILE) {
+    # print "File Exists!";
+    my $converts_cmd = convert_to_stream . " -i  $MASTER_INPUT_FILE";
+    print " $converts_cmd \n";
+    system($converts_cmd);
+}
+
+#copy directory tree
+#the newer version of perl includes a package that does this for you. If
+# you are wondering why i am doing it this way, dont, it works and Ill make it
+# nicer when the newer version gets installed.
+sub copyDirTree() {
+    ( my $inputDir, my $outputDir ) = @_;
+    setPath($inputDir);
+
+    my @dirs = `find * -type d -print`;
+    foreach my $dirs (@dirs) {
+        chomp($dirs);
+        #$dirs =~ s/upload/masters/g;
+
+        #print "$outputDir \n";
+        setPath($outputDir);
+
+
+        print "$dirs \n";
+        mkpath($dirs);
+
+    }
+
+    #mkdir $dirs or die $!;
+    # system('mkdir $dirs');
+}
+
+#set path
+sub setPath() {
+    ( my $dir ) = @_;
+print "Moving to directory $dir";
+    #chdir($path) or die "Cannot chdir to $path: $!";
+$ENV{PATH} .= ":$dir";
+}
+
+#strip extenstions from filename
+sub strip () {
+    ( my $filename ) = @_;
+
+    my $OUTPUT_FILE = $filename;
+
+    # trim the directories from the front
+    $OUTPUT_FILE =~ s/^.*\///;
+
+    # trim the suffix
+    $OUTPUT_FILE =~ s/\.[^\.]*$//;
+
+    # dots are only for me
+    $OUTPUT_FILE =~ s/\./_/g;
+    return $OUTPUT_FILE;
+}
 
 exit;
