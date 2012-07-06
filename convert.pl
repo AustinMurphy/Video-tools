@@ -20,16 +20,12 @@ if ( -e $directory ) {
 
 my $numArgs = $#ARGV + 1;
 
-#foreach $argnum (0 .. $#ARGV) {
-#  print "$ARGV[$argnum]\n";
-#}
-
 #check for input. If none, run from upload directory.
 if ( $numArgs == 0 ) {
 
     #copy folder tree into the master directory.
-    my $orig = "$HOMEDIR/videos/upload";
-    my $new  = "$HOMEDIR/videos/masters";
+    my $orig = "$HOMEDIR/videos/upload/";
+    my $new  = "$HOMEDIR/videos/masters/";
 
     print "Copying folder tree into masters directory \n\n";
 
@@ -38,7 +34,7 @@ if ( $numArgs == 0 ) {
     setPath($orig);
 
     #fild all files in the original directory
-    my @files = (`find $HOMEDIR/videos/upload  -type f`);
+    my @files = (`find $HOMEDIR/videos/upload/  -type f`);
     foreach my $file (@files) {
 
         ( my $fileBaseName, my $dirName, my $fileExtension ) = fileparse($file);
@@ -52,45 +48,42 @@ if ( $numArgs == 0 ) {
         convertToMaster($file);
     }
 
-     $orig = "$HOMEDIR/videos/masters";
-     $new  = "$HOMEDIR/videos/public";
+    $orig = "$HOMEDIR/videos/masters/";
+    $new  = "$HOMEDIR/videos/public/";
 
-    copyDirTree("/home/kbende/videos/masters", "/home/kbende/videos/public"  );
+    copyDirTree( "/home/kbende/videos/masters/",
+        "/home/kbende/videos/public/" );
 
     setPath($new);
 
     #fild all files in the master directory
-    my @files = (`find $HOMEDIR/videos/masters  -type f`);
-print "@files\n";
+    my @files = (`find $HOMEDIR/videos/masters/  -type f`);
+    print "@files\n";
     foreach my $file (@files) {
 
         ( my $fileBaseName, my $dirName, my $fileExtension ) = fileparse($file);
-print "$fileExtension";
-if( $fileExtension == ".master"){
-        my $outputFile = $file;
-        $outputFile = $dirName;
-        $dirName =~ s/masters/public/;
+        print "$fileExtension";
+        if ( $fileExtension == ".master" ) {
+            my $outputFile = $file;
+            $outputFile = $dirName;
+            $dirName =~ s/masters/public/;
 
-        setPath($dirName);
-        print "setpath to $dirName\n";
-print "//////////////////////////// $file \n";
-        convertToStream($file);
+            setPath($dirName);
+            print "setpath to $dirName\n";
+            convertToStream($file);
+        }
     }
-}
 }
 
 if ( $numArgs >= 1 ) {
-
     foreach my $argnum ( 0 .. $#ARGV ) {
         my $filename = $ARGV[$argnum];
         convertToMaster($filename);
     }
 }
-
+# convert media file to master
 sub convertToMaster() {
-
     ( my $inputFile ) = @_;
-
     print "$inputFile\n";
     print "File Exists! \n";
     print " converting to master. \n";
@@ -99,15 +92,10 @@ sub convertToMaster() {
     system($convertm_cmd);
 }
 
+# convert master file to streaming
 sub convertToStream() {
     ( my $MASTER_INPUT_FILE ) = @_;
-    #my $OUTPUT_FILE = strip($MASTER_INPUT_FILE);
     print "converting to stream. \n";
-    #my $MASTER_INPUT_FILE = $OUTPUT_FILE . ".master";
-
-    #my $MASTER_OUTPUT_FILE = $OUTPUT_FILE . ".master";
-    #if (-e $MASTER_INPUT_FILE) {
-    # print "File Exists!";
     my $converts_cmd = convert_to_stream . " -i  $MASTER_INPUT_FILE";
     print " $converts_cmd \n";
     system($converts_cmd);
@@ -119,35 +107,28 @@ sub convertToStream() {
 # nicer when the newer version gets installed.
 sub copyDirTree() {
     ( my $inputDir, my $outputDir ) = @_;
+    print "input $inputDir ... output $outputDir\n";
     setPath($inputDir);
 
     my @dirs = `find * -type d -print`;
+    print "dirs =  @dirs\n";
     foreach my $dirs (@dirs) {
         chomp($dirs);
-        #$dirs =~ s/upload/masters/g;
-
-        #print "$outputDir \n";
         setPath($outputDir);
-
-
         print "$dirs \n";
         mkpath($dirs);
-
     }
-
-    #mkdir $dirs or die $!;
-    # system('mkdir $dirs');
 }
 
-#set path
+#set dir path
 sub setPath() {
     ( my $dir ) = @_;
-print "Moving to directory $dir";
-    #chdir($path) or die "Cannot chdir to $path: $!";
-$ENV{PATH} .= ":$dir";
+    print "Moving to directory $dir";
+    chdir($dir) or die "Cannot chdir to $dir: $!";
 }
 
 #strip extenstions from filename
+#I stole this code from Austin. :)
 sub strip () {
     ( my $filename ) = @_;
 
