@@ -40,11 +40,11 @@ use constant MIN_VID_ASPECT => 1;
 # DAR lookup table
 my %dars = (
   "1.33"  =>  "4:3",
-  "1.5"   =>  "3:2",
+  #"1.5"   =>  "3:2",
   "1.50"  =>  "3:2",
   "1.78"  => "16:9",
 );
- 
+
 my $realmedia = 0;
 
 ############################
@@ -386,20 +386,22 @@ my $wav_extr_errors = `$wav_extr_cmd 2>/dev/null`;
 # Snap to aspect ratio
 sub snap {
   (my $width, my $height) = @_;
-if ( $width == 0 ||  $height == 0){
-  # divide by zero detected. Prepare for universe collapse.
-} else {
-my $ratio = $width/$height ;
-
- while ( my ($key, $value) = each(%dars) ) {
-       if  (abs($key - $ratio) < 0.1) {
-print "snapping to $key\n";
-	return $key; 
-    }
+my $size = 0;
+my $ratio;
+  if ( $width == 0 ||  $height == 0){
+    # divide by zero detected. Prepare for universe collapse.
+  }else {
+      $ratio = $width/$height ;
+      while ( my ($key, $value) = each(%dars) ) {
+        if  (abs($key - $ratio) < 0.1) {
+        $size = $key; 
+        }
+     } 
+   }
+   if (!$size){
+     $size = $ratio;
   }
-print "keeping deafult size of $ratio\n";
-return $ratio;
-}
+return $size;
 }
 
 
@@ -469,7 +471,7 @@ my $v_aspect='0';
 
 my $CONVERTED_OUTPUT_FILE= $OUTPUT_FILE . ".tmp";
 
-my $rm_convert_cmd =  MENCODER . " $video_raw  -oac lavc -ovc  lavc  -aspect $v_aspect -o $CONVERTED_OUTPUT_FILE ";  
+my $rm_convert_cmd =  MENCODER . " $video_raw  -oac lavc -ovc  lavc  aspect=$v_aspect -o $CONVERTED_OUTPUT_FILE ";  
 
 my $converted_errors = `$rm_convert_cmd 2>/dev/null`;
 
@@ -478,7 +480,7 @@ print "Running realmedia conversion command: \n $rm_convert_cmd \n" ;
 print "Rerunning conversion scripts. \n" ;
 
 system("convert_video_to_master.pl", "$CONVERTED_OUTPUT_FILE") ;
-#system("rm $CONVERTED_OUTPUT_FILE");
+system("rm $CONVERTED_OUTPUT_FILE");
 print " END OF VIDEO CONVERSION SCRIPT \n";
 exit;
 }
@@ -504,7 +506,7 @@ my $v_aspect='0';
 
 my $CONVERTED_OUTPUT_FILE= $OUTPUT_FILE . ".tmp";
 
-my $rm_convert_cmd = FFMPEG . " -i $video_raw -c:v libx264  -c:a pcm_s16le  -f matroska $CONVERTED_OUTPUT_FILE";
+my $rm_convert_cmd = FFMPEG . " -i $video_raw -c:v libx264  -c:a pcm_s16le  -s $v_aspect -f matroska $CONVERTED_OUTPUT_FILE";
 
 my $converted_errors = `$rm_convert_cmd 2>/dev/null`;
 

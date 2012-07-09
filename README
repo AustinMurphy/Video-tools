@@ -4,5 +4,9 @@ Video conversion scripts.
 
 TODO
 
-Need to add check to see if file has already been created. If so, do not run again.
+1. TEST
+
+Done
+1. Need to add check to see if file has already been created. If so, do not run again.
+2. Need to add single file option.
 

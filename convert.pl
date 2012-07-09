@@ -11,17 +11,18 @@ use constant convert_to_stream =>
 #Home Directory PATH
 my $HOMEDIR = $ENV{"HOME"};
 
-#check for video directory.
-my $directory = "$HOMEDIR/videos";
-if ( -e $directory ) {
-
-    # needs check
-}
-
 my $numArgs = $#ARGV + 1;
 
 #check for input. If none, run from upload directory.
 if ( $numArgs == 0 ) {
+
+    #check for video directory.
+    my $directory = "$HOMEDIR/videos";
+    unless ( -e $directory ) {
+        print "video directory does not exist in your home folder.\n";
+        print "Exiting";
+        exit;
+    }
 
     #copy folder tree into the master directory.
     my $orig = "$HOMEDIR/videos/upload/";
@@ -37,7 +38,8 @@ if ( $numArgs == 0 ) {
     my @files = (`find $HOMEDIR/videos/upload/  -type f`);
     foreach my $file (@files) {
 
-        ( my $fileBaseName, my $dirName, my $fileExtension ) = fileparse($file);
+        ( my $fileBaseName, my $dirName, my $fileExtension ) =
+          fileparse( $file, qr/\.[^.]*/ );
 
         my $outputFile = $file;
         $outputFile = $dirName;
@@ -45,24 +47,30 @@ if ( $numArgs == 0 ) {
 
         setPath($dirName);
         print "setpath to $dirName\n";
-        convertToMaster($file);
+
+        #check if file already exists, if so , do not run again.
+        if ( -e "$fileBaseName.master" ) {
+            last;
+        }
+        else {
+            convertToMaster($file);
+        }
     }
 
     $orig = "$HOMEDIR/videos/masters/";
     $new  = "$HOMEDIR/videos/public/";
 
-    copyDirTree( "/home/kbende/videos/masters/",
-        "/home/kbende/videos/public/" );
+    copyDirTree( "$HOMEDIR/videos/masters/", "$HOMEDIR/videos/public/" );
 
     setPath($new);
 
-    #fild all files in the master directory
-    my @files = (`find $HOMEDIR/videos/masters/  -type f`);
+    #find all files in the master directory
+    my @files = (`find $HOMEDIR/videos/masters/  -name  \*.master`);
     print "@files\n";
     foreach my $file (@files) {
 
-        ( my $fileBaseName, my $dirName, my $fileExtension ) = fileparse($file);
-        print "$fileExtension";
+        ( my $fileBaseName, my $dirName, my $fileExtension ) =
+          fileparse( $file, qr/\.[^.]*/ );
         if ( $fileExtension == ".master" ) {
             my $outputFile = $file;
             $outputFile = $dirName;
@@ -75,12 +83,18 @@ if ( $numArgs == 0 ) {
     }
 }
 
+#check for manual input of files.
 if ( $numArgs >= 1 ) {
     foreach my $argnum ( 0 .. $#ARGV ) {
         my $filename = $ARGV[$argnum];
+        ( my $fileBaseName, my $dirName, my $fileExtension ) =
+          fileparse( $filename, qr/\.[^.]*/ );
+
         convertToMaster($filename);
+        convertToStream("$fileBaseName.master");
     }
 }
+
 # convert media file to master
 sub convertToMaster() {
     ( my $inputFile ) = @_;

@@ -450,7 +450,7 @@ my $WEBM_FF_AUD = "-acodec libvorbis -ab " . OUT_AUD_BITRATE ."k -ac " . OUT_AUD
 # 
 # MP4 conversion
 #
-
+unless (fileExists($MP4_OUTPUT_FILE, "MP4")){
 my $mp4_cmd = FFMPEG . " -threads 12 -i $video_raw $MP4_FF_VID -s $VID_SIZE -r $VID_FR $MP4_FF_AUD -f mp4 $MP4_OUTPUT_FILE-tmp ";
 
 # need to convert tmp to real (qt-faststart)
@@ -469,13 +469,13 @@ print "Running MP4 qtfs command: \n $mp4_cmd_qt \n";
 
 my $mp4qt_errors = `$mp4_cmd_qt 2>/dev/null`;
 my $mp4qt_rm_errors = `rm -f $MP4_OUTPUT_FILE-tmp 2>/dev/null`;
-
+}
 
 
 # 
 # OGG conversion
 #
-
+unless (fileExists($OGG_OUTPUT_FILE, "OGG")){
 my $ogg_cmd = FF2T . " $FF2T_VID -x $out_v_width -y $out_v_height -F $VID_FR $FF2T_AUD -o $OGG_OUTPUT_FILE $video_raw ";
 
 print "\n\n";
@@ -485,13 +485,13 @@ print "\n";
 print "Running OGG conversion command: \n $ogg_cmd \n";
 
 my $ogg_errors = `$ogg_cmd 2>/dev/null`;
-
+}
 
 
 # 
 # WEBM conversion
 #
-
+unless (fileExists($WEBM_OUTPUT_FILE, "WEBM")){
 my $webm_cmd = FFMPEG . " -threads 12 -i $video_raw $WEBM_FF_VID -s $VID_SIZE -r $VID_FR $WEBM_FF_AUD -f webm $WEBM_OUTPUT_FILE ";
 
 print "\n\n";
@@ -502,7 +502,7 @@ print " Running WEBM conversion command: \n $webm_cmd \n";
 
 my $webm_errors = `$webm_cmd 2>/dev/null`;
 
-
+}
 
 print "\n";
 #print "\n";
@@ -511,6 +511,17 @@ print " END OF VIDEO CONVERSION SCRIPT \n";
 
 exit;
 
+
+sub fileExists(){
+  (my $filename, my $format) = @_;
+   if (-e $filename){
+   print "\n";
+   print "$format has already been created.\n ";
+   print "Please delete file to convert again. \n";
+   return 1;
+   }
+return 0;
+}
 
 ############################
 #
