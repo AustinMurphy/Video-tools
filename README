@@ -2,4 +2,7 @@ Readme:
 
 Video conversion scripts. 
 
+TODO
+
+Need to add check to see if file has already been created. If so, do not run again.
 
