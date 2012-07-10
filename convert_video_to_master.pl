@@ -1,4 +1,23 @@
 #!/usr/bin/perl
+#
+#  Written by Austin Murphy <austin.murphy@gmail.com>, 2010 - 2012
+#  Kyle Bender <kyle6174@gmail.com> 2012
+# 
+#  This script takes an input video and creates a "master" from it.
+#    - validates that source video meets requirements (res, dur, aspect, etc)
+#    - moves video (unchanged) to Matroska container
+#    - normalizes the audio volume
+#    - removes extra video/audio/subtitle/data streams
+# 
+#  Desired, but unimplemented, features are:
+#    - choose best of multiple streams
+#    - compress the dynamic range of the audio
+#    - transcode subtitles
+#    - visual brightness normalizing
+#    - de-letterboxing
+#  
+#
+
 
 use strict;
 

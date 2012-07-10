@@ -1,4 +1,16 @@
 #!/usr/bin/perl
+#
+#  Written by Austin Murphy <austin.murphy@gmail.com>, 2010 - 2012
+#  Kyle Bender <kyle6174@gmail.com> 2012
+# 
+#  This script takes a "master" video and converts it to 3 streamable formats.
+#    - Format 1:  h.264 / AAC / MP4 
+#    - Format 2:  theora / vorbis / ogg
+#    - Format 3:  vp8 / vorbis / webm
+#    - output size options: 240p, 360p, 480p (aspect ratio is preserved)
+#    - tries to make smart decisions, like not upscaling
+#
+
 
 use strict;
 use Getopt::Std;
