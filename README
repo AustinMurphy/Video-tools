@@ -55,4 +55,17 @@ needs to be assembled.  These scripts scan the current directory for
 videos and assemble the HTML.  One script outputs everything in one 
 HTML page to stdout.  The other script creates one file per video.
 
+Shortcut
 
+  convert_video.pl
+
+  If the program is run without any input, it will run from the users
+home directory in the video directory. It will grab files in
+the upload directory and output the converted version into the 
+public directory. 
+
+  There is also an option to run the conversion program on files 
+outside of the video directory. The program takes the filenames 
+as input. Multiple files can be inputted at the same time.
+If this process is used, all output is placed in the same 
+directory as the program is run from. 
